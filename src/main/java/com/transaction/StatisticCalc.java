@@ -1,5 +1,6 @@
 package com.transaction;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -26,9 +27,11 @@ public class StatisticCalc implements Runnable {
 		int sum = 0;
 		Statistic statistic = new Statistic();
 		ListIterator<Transaction> listIterator = trans.listIterator();
+		Date now = new Date();
+		long nowInSecs = now.getTime();
 		while (listIterator.hasNext()) {
 			Transaction t = listIterator.next();
-			if (t.getTimestamp() / 1000 <= 60) {
+			if ((nowInSecs-t.getTimestamp()) / 1000 <= TransactionController.OLD_TRX) {
 				count++;
 				statistic.setMax(Math.max(statistic.getMax(), t.getAmount()));
 				statistic.setMin(Math.min(statistic.getMin(), t.getAmount()));

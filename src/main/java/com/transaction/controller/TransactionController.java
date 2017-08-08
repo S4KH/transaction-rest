@@ -27,8 +27,8 @@ public class TransactionController implements ErrorController{
 	
 	private static final String PATH = "/error";
 	private static Statistic statistics = new Statistic();
-	private static LinkedList<Transaction> transactions;
-	private static final int OLD_TRX = 60;
+	private static LinkedList<Transaction> transactions = new LinkedList<Transaction>();
+	public static final int OLD_TRX = 60;
 	
     @RequestMapping(value = PATH)
     public String error() {
@@ -39,7 +39,7 @@ public class TransactionController implements ErrorController{
 	public ResponseEntity<?> transaction(@RequestBody Transaction t){
 		Date now = new Date();
 		long nowInSecs = now.getTime();
-		Thread calcer = null;		
+		Thread calcer = null;
 		//Checking if transaction is old
 		if((nowInSecs-t.getTimestamp())/1000 <= OLD_TRX){
 			transactions.add(t);
