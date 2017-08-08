@@ -1,5 +1,6 @@
 package com.transaction;
 
+import java.util.LinkedList;
 import java.util.ListIterator;
 
 import com.transaction.controller.TransactionController;
@@ -14,16 +15,17 @@ import com.transaction.model.Transaction;
  */
 public class StatisticCalc implements Runnable {
 
-	private Statistic statistic;
+	private LinkedList<Transaction> trans;
 	
-	public StatisticCalc(Statistic stat) {
-		this.statistic = stat;
+	public StatisticCalc(LinkedList<Transaction> t) {
+		this.trans = t;
 	}
 
 	public void run() {
 		long count = 0;
 		int sum = 0;
-		ListIterator<Transaction> listIterator = statistic.getTransactions().listIterator();
+		Statistic statistic = new Statistic();
+		ListIterator<Transaction> listIterator = trans.listIterator();
 		while (listIterator.hasNext()) {
 			Transaction t = listIterator.next();
 			if (t.getTimestamp() / 1000 <= 60) {
