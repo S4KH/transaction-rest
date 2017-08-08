@@ -3,13 +3,14 @@ package com.transaction.controller;
 import java.util.Date;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 
 import org.springframework.boot.autoconfigure.web.ErrorController;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.transaction.StatisticCalc;
 import com.transaction.model.Statistic;
 import com.transaction.model.Transaction;
 
@@ -20,7 +21,7 @@ import com.transaction.model.Transaction;
  */
 
 @RestController
-public class TransactionController implements ErrorController {
+public class TransactionController implements ErrorController{
 	
 	private static final String PATH = "/error";
 	private static final int SUCCESS = 201;
@@ -34,13 +35,17 @@ public class TransactionController implements ErrorController {
 	
 	@RequestMapping(value = "/transaction", method = RequestMethod.POST, 
             consumes = "application/json")
-	public void transaction(@Valid Transaction t, HttpServletResponse response){
+	public void transaction(@RequestBody Transaction t, HttpServletResponse response){
 		Date now = new Date();
 		long nowInSecs = now.getTime();
+		Thread calcer = null;
 		
 		//Checking if transaction is old
 		if((nowInSecs-t.getTimestamp())/1000 <= 60){
-			response.setStatus(SUCCESS);
+			statistics.getTransactions().add(t);
+			calcer = new Thread(new StatisticCalc(statistics));
+			calcer.start();
+			response.setStatus(SUCCESS);			
 		}else{
 			response.setStatus(FAILED_OLD);
 		}
@@ -58,6 +63,10 @@ public class TransactionController implements ErrorController {
 
 	public String getErrorPath() {
 		return PATH;
+	}
+	
+	public static void setStatistic(Statistic stat){
+		statistics = stat;
 	}
 
 }
