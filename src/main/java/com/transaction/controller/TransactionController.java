@@ -3,11 +3,10 @@ package com.transaction.controller;
 import java.util.Date;
 import java.util.LinkedList;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,32 +26,28 @@ import com.transaction.model.Transaction;
 public class TransactionController implements ErrorController{
 	
 	private static final String PATH = "/error";
-	private static final int SUCCESS = 201;
-	private static final int FAILED_OLD = 204;
-	private static Statistic statistics;
+	private static Statistic statistics = new Statistic();
 	private static LinkedList<Transaction> transactions;
+	private static final int OLD_TRX = 60;
 	
     @RequestMapping(value = PATH)
     public String error() {
     	return "Unexpected error has happened.Please contact administrator!!!";
     }
 	
-	@RequestMapping(value = "/transaction", method = RequestMethod.POST, 
-            consumes = "application/json")
-	public void transaction(@RequestBody Transaction t, HttpServletResponse response){
+	@PostMapping("/transaction")
+	public ResponseEntity<?> transaction(@RequestBody Transaction t){
 		Date now = new Date();
 		long nowInSecs = now.getTime();
-		Thread calcer = null;
-		
+		Thread calcer = null;		
 		//Checking if transaction is old
-		if((nowInSecs-t.getTimestamp())/1000 <= 60){
+		if((nowInSecs-t.getTimestamp())/1000 <= OLD_TRX){
 			transactions.add(t);
 			calcer = new Thread(new StatisticCalc(transactions));
-			calcer.start();
-			response.setStatus(SUCCESS);			
-		}else{
-			response.setStatus(FAILED_OLD);
+			calcer.start();		
+			return new ResponseEntity(HttpStatus.CREATED);
 		}
+		return new ResponseEntity(HttpStatus.NO_CONTENT);
 	}
 	
 	@RequestMapping(value = "/statistics", method = RequestMethod.GET, produces = "application/json")
