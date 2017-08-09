@@ -1,8 +1,9 @@
 package com.transaction;
 
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.ListIterator;
+import java.util.Iterator;
+import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
 
 import com.transaction.controller.TransactionController;
 import com.transaction.model.Statistic;
@@ -14,19 +15,28 @@ import com.transaction.model.Transaction;
  * @author SKH
  *
  */
-public class StatisticCalc implements Runnable {
+public class StatisticTask extends TimerTask {
 
-	private LinkedList<Transaction> trans;
+	private BlockingQueue<Transaction> trans;
 	
-	public StatisticCalc(LinkedList<Transaction> t) {
+	public StatisticTask(BlockingQueue<Transaction> t) {
 		this.trans = t;
 	}
 
+	@Override
 	public void run() {
+		calculateStatistics();
+	}
+
+	private void calculateStatistics() {
+		if(trans.isEmpty()){
+			TransactionController.setStatistic(new Statistic());
+			return;
+		}
 		long count = 0;
 		int sum = 0;
 		Statistic statistic = new Statistic();
-		ListIterator<Transaction> listIterator = trans.listIterator();
+		Iterator<Transaction> listIterator = trans.iterator();
 		Date now = new Date();
 		long nowInSecs = now.getTime();
 		while (listIterator.hasNext()) {
@@ -39,11 +49,13 @@ public class StatisticCalc implements Runnable {
 			} else {
 				listIterator.remove();
 			}
-		}
+		}		
 		statistic.setSum(sum);
-		statistic.setAvg(sum / count);
+		statistic.setAvg(sum, count);
 		statistic.setCount(count);
 		TransactionController.setStatistic(statistic);
 	}
+	
+	
 
 }
